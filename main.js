@@ -1,5 +1,11 @@
 import "./style.css";
-import { images } from "./modules/helpers";
+import {
+  images,
+  getDistance,
+  IMAGE_WIDTH,
+  IMAGE_HEIGHT,
+  getGridStartingPoint,
+} from "./modules/helpers";
 const canvas = document.querySelector("#demoCanvas");
 const scroller = document.querySelector(".scroller");
 
@@ -9,6 +15,7 @@ let bitmaps = [];
 let unusedBitmaps = [];
 window.container = container;
 window.bitmaps = bitmaps;
+window.unusedBitmaps = unusedBitmaps;
 function init() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -26,21 +33,22 @@ function tick(evt) {
 }
 
 function setupImages() {
-  let x = window.scrollX;
-  let y = window.scrollY;
+  let x = getGridStartingPoint("x");
+  let y = getGridStartingPoint("y");
+
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
     bitmap.x = x;
     bitmap.y = y;
-    bitmap.width = 350;
-    bitmap.height = 350;
-    bitmap.sourceRect = new createjs.Rectangle(0, 0, 350, 350);
-    x += 350;
-    if (x > window.innerWidth + window.scrollX) {
+    bitmap.width = IMAGE_WIDTH;
+    bitmap.height = IMAGE_HEIGHT;
+    bitmap.sourceRect = new createjs.Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
+    x += IMAGE_WIDTH;
+    if (x > window.innerWidth + window.scrollX + IMAGE_WIDTH) {
       x = window.scrollX;
-      y += 350;
+      y += IMAGE_HEIGHT;
     }
-    if (y > window.scrollX + window.innerHeight) {
+    if (y > window.scrollX + window.innerHeight + IMAGE_HEIGHT) {
       unusedBitmaps.push(bitmap);
     } else {
       bitmaps.push(bitmap);
@@ -48,62 +56,26 @@ function setupImages() {
     }
   });
 }
-function hitTest(coords, i) {
-  if (bitmaps[i].y + bitmaps[i].height + container.y <= 0) {
-    //remove top image
+function hitTest(i) {
+  if (
+    Math.sqrt(
+      window.innerWidth * window.innerWidth +
+        window.innerHeight * window.innerHeight
+    ) <
+    getDistance(bitmaps[i], {
+      x: window.scrollX,
+      y: window.scrollY,
+    })
+  ) {
     container.removeChild(bitmaps[i]);
     const el = bitmaps.splice(i, 1)[0];
     unusedBitmaps.push(el);
-    const newBitmap = unusedBitmaps.shift();
-    newBitmap.y = coords.highestY + 350;
-    newBitmap.x = el.x;
-    bitmaps.push(newBitmap);
-    container.addChild(newBitmap);
   }
-  if (bitmaps[i].y + container.y > canvas.height + 350) {
-    //remove bottom image
-    container.removeChild(bitmaps[i]);
-    const el = bitmaps.splice(i, 1)[0];
-    unusedBitmaps.push(el);
-    const newBitmap = unusedBitmaps.shift();
-    newBitmap.y = coords.lowestY - 350;
-    newBitmap.x = el.x;
-    bitmaps.push(newBitmap);
-    container.addChild(newBitmap);
-  }
-  return true;
 }
-function getCoords() {
-  let lowestX = null;
-  let lowestY = null;
-  let highestX = null;
-  let highestY = null;
 
-  bitmaps.forEach((img) => {
-    if (img.x < lowestX || lowestX === null) {
-      lowestX = img.x;
-    }
-    if (img.y < lowestY || lowestY === null) {
-      lowestY = img.y;
-    }
-    if (img.x > highestX || highestX === null) {
-      highestX = img.x;
-    }
-    if (img.y > highestY || highestY === null) {
-      highestY = img.y;
-    }
-  });
-  return {
-    lowestX,
-    lowestY,
-    highestX,
-    highestY,
-  };
-}
 function removeOffScreenBitmaps() {
-  const coords = getCoords();
   for (let i = bitmaps.length - 1; i >= 0; i--) {
-    hitTest(coords, i);
+    hitTest(i);
   }
 }
 
@@ -120,6 +92,43 @@ function resetScroller() {
     );
   } */
 }
+function addImages() {
+  let x = getGridStartingPoint("x");
+  let y = getGridStartingPoint("y");
+  let origX = x;
+  let origY = y;
+
+  let usedPositions = bitmaps.map((bm) => ({
+    x: Math.floor(bm.x),
+    y: Math.floor(bm.y),
+  }));
+
+  let vacantPositions = [];
+
+  for (
+    let tx = origX;
+    tx < origX + window.innerWidth + IMAGE_WIDTH;
+    tx += IMAGE_WIDTH
+  ) {
+    for (
+      let ty = origY;
+      ty < origY + window.innerHeight + IMAGE_HEIGHT;
+      ty += IMAGE_HEIGHT
+    ) {
+      if (!usedPositions.find((pos) => pos.x === tx && pos.y === ty)) {
+        console.log(tx, ty, "is empty");
+        vacantPositions.push({ x: tx, y: ty });
+      }
+    }
+  }
+  vacantPositions.forEach((pos) => {
+    const newBitmap = unusedBitmaps.shift();
+    newBitmap.y = pos.y;
+    newBitmap.x = pos.x;
+    bitmaps.push(newBitmap);
+    container.addChild(newBitmap);
+  });
+}
 let idleID;
 function handleScroll(e) {
   // Clear our timeout throughout the scroll
@@ -133,5 +142,6 @@ function handleScroll(e) {
   container.y = -window.scrollY;
   container.x = -window.scrollX;
   removeOffScreenBitmaps();
+  addImages();
 }
 init();
