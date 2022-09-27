@@ -37,53 +37,65 @@ function tick(evt) {
 }
 
 function setupImages() {
-  /* let x = getGridStartingPoint("x");
-  let y = getGridStartingPoint("y"); */
-
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
-    /* bitmap.x = x;
-    bitmap.y = y; */
     bitmap.width = IMAGE_WIDTH;
     bitmap.height = IMAGE_HEIGHT;
     bitmap.sourceRect = new createjs.Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
     unusedBitmaps.push(bitmap);
-    /* x += IMAGE_WIDTH;
-    if (x > window.innerWidth + window.scrollX + IMAGE_WIDTH) {
-      x = window.scrollX;
-      y += IMAGE_HEIGHT;
-    }
-    if (y > window.scrollX + window.innerHeight + IMAGE_HEIGHT) {
-      unusedBitmaps.push(bitmap);
-    } else {
-      bitmaps.push(bitmap);
-      container.addChild(bitmap);
-    } */
   });
 }
-function hitTest(i) {
+/* function hitTest(i) {
   if (
     Math.sqrt(
       window.innerWidth * window.innerWidth +
         window.innerHeight * window.innerHeight
     ) <
     getDistance(bitmaps[i], {
-      x: window.scrollX,
-      y: window.scrollY,
+      x: window.scrollX + window.innerWidth,
+      y: window.scrollY + window.innerHeight,
     })
   ) {
     container.removeChild(bitmaps[i]);
     const el = bitmaps.splice(i, 1)[0];
-    console.log("removing", el);
+
     unusedBitmaps.push(el);
   }
-}
+} */
 
 function removeOffScreenBitmaps() {
+  let x = getGridStartingPoint("x");
+  let y = getGridStartingPoint("y");
+
+  let allowedPositions = [];
+
+  const xEnd = x + window.innerWidth + IMAGE_WIDTH;
+  const yEnd = y + window.innerHeight + IMAGE_HEIGHT;
+  for (let tx = x; tx < xEnd; tx += IMAGE_WIDTH) {
+    for (let ty = y; ty < yEnd; ty += IMAGE_HEIGHT) {
+      allowedPositions.push({ x: tx, y: ty });
+    }
+  }
+
+  for (let i = bitmaps.length - 1; i >= 0; i--) {
+    if (
+      !allowedPositions.find(
+        (pos) => pos.x === bitmaps[i].x && pos.y === bitmaps[i].y
+      )
+    ) {
+      container.removeChild(bitmaps[i]);
+      const el = bitmaps.splice(i, 1)[0];
+
+      unusedBitmaps.push(el);
+    }
+  }
+}
+/* function removeOffScreenBitmaps() {
+  //TODO: samme logik som vet at tilføje? lav et grid rundt om og se hvad der er langt nok væk?
   for (let i = bitmaps.length - 1; i >= 0; i--) {
     hitTest(i);
   }
-}
+} */
 
 function resetScroller() {
   //window.scrollTo(2000, 2000);
@@ -101,9 +113,37 @@ function resetScroller() {
 function addImages() {
   let x = getGridStartingPoint("x");
   let y = getGridStartingPoint("y");
-  let origX = x;
-  let origY = y;
+  let usedPositions = bitmaps.map((bm) => ({
+    x: Math.floor(bm.x),
+    y: Math.floor(bm.y),
+  }));
 
+  let vacantPositions = [];
+
+  const xEnd = x + window.innerWidth + IMAGE_WIDTH;
+  const yEnd = y + window.innerHeight + IMAGE_HEIGHT;
+  for (let tx = x; tx < xEnd; tx += IMAGE_WIDTH) {
+    for (let ty = y; ty < yEnd; ty += IMAGE_HEIGHT) {
+      if (!usedPositions.find((pos) => pos.x === tx && pos.y === ty)) {
+        vacantPositions.push({ x: tx, y: ty });
+      }
+    }
+  }
+
+  vacantPositions.forEach((pos) => {
+    const newBitmap = unusedBitmaps.shift();
+    newBitmap.y = pos.y;
+    newBitmap.x = pos.x;
+    bitmaps.push(newBitmap);
+    container.addChild(newBitmap);
+  });
+  /* const newBitmap = unusedBitmaps.shift();
+  newBitmap.y = 2000;
+  newBitmap.x = 2000;
+  bitmaps.push(newBitmap);
+  container.addChild(newBitmap); */
+  /* let x = getGridStartingPoint("x");
+  let y = getGridStartingPoint("y");
   let usedPositions = bitmaps.map((bm) => ({
     x: Math.floor(bm.x),
     y: Math.floor(bm.y),
@@ -112,13 +152,13 @@ function addImages() {
   let vacantPositions = [];
 
   for (
-    let tx = origX;
-    tx < origX + window.innerWidth + IMAGE_WIDTH;
+    let tx = 0;
+    tx < x + window.innerWidth + IMAGE_WIDTH * 2;
     tx += IMAGE_WIDTH
   ) {
     for (
-      let ty = origY;
-      ty < origY + window.innerHeight + IMAGE_HEIGHT;
+      let ty = 0;
+      ty < y + window.innerHeight + IMAGE_HEIGHT * 2;
       ty += IMAGE_HEIGHT
     ) {
       if (!usedPositions.find((pos) => pos.x === tx && pos.y === ty)) {
@@ -126,14 +166,14 @@ function addImages() {
       }
     }
   }
-  console.log(usedPositions, vacantPositions);
+
   vacantPositions.forEach((pos) => {
     const newBitmap = unusedBitmaps.shift();
     newBitmap.y = pos.y;
     newBitmap.x = pos.x;
     bitmaps.push(newBitmap);
     container.addChild(newBitmap);
-  });
+  }); */
 }
 let idleID;
 function handleScroll(e) {
@@ -151,3 +191,13 @@ function handleScroll(e) {
   addImages();
 }
 init();
+
+function debug() {
+  console.log({ unusedBitmaps });
+  console.log({ bitmaps });
+  console.log(container.x, container.y);
+  console.log(window.scrollX, window.scrollY);
+  console.log(getGridStartingPoint("x"), getGridStartingPoint("y"));
+}
+window.debug = debug;
+window.getGridStartingPoint = getGridStartingPoint;
