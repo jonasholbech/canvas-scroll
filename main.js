@@ -14,9 +14,10 @@ function init() {
   canvas.height = window.innerHeight;
   container.width = window.innerWidth;
   container.height = window.innerHeight;
+  window.scrollTo(2000, 2000);
   stage.addChild(container);
   setupImages();
-  window.addEventListener("scroll", handleScroll);
+  window.addEventListener("scroll", handleScroll); //false?
   createjs.Ticker.framerate = 45;
   createjs.Ticker.addEventListener("tick", tick);
 }
@@ -27,7 +28,6 @@ function tick(evt) {
 function setupImages() {
   let x = window.scrollX;
   let y = window.scrollY;
-  //TODO: scrollX til at starte med?
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
     bitmap.x = x;
@@ -36,11 +36,11 @@ function setupImages() {
     bitmap.height = 350;
     bitmap.sourceRect = new createjs.Rectangle(0, 0, 350, 350);
     x += 350;
-    if (x > window.innerWidth) {
+    if (x > window.innerWidth + window.scrollX) {
       x = window.scrollX;
       y += 350;
     }
-    if (y > window.innerHeight + 1000) {
+    if (y > window.scrollX + window.innerHeight) {
       unusedBitmaps.push(bitmap);
     } else {
       bitmaps.push(bitmap);
@@ -49,7 +49,7 @@ function setupImages() {
   });
 }
 function hitTest(coords, i) {
-  if (bitmaps[i].y + bitmaps[i].height + container.y < -350) {
+  if (bitmaps[i].y + bitmaps[i].height + container.y <= 0) {
     //remove top image
     container.removeChild(bitmaps[i]);
     const el = bitmaps.splice(i, 1)[0];
@@ -93,8 +93,6 @@ function getCoords() {
       highestY = img.y;
     }
   });
-  //remove children not seen
-
   return {
     lowestX,
     lowestY,
@@ -108,33 +106,32 @@ function removeOffScreenBitmaps() {
     hitTest(coords, i);
   }
 }
-/* function addRowBelow() {
-  const bitmap = unusedBitmaps.pop();
-  console.log(bitmap);
-  bitmap.x = 0;
-  bitmap.y = 1050;
-  bitmaps.push(bitmap);
-  stage.addChild(bitmap);
-  console.log("adding");
-} */
 
-function handleScroll() {
+function resetScroller() {
+  //window.scrollTo(2000, 2000);
+  /*  //expand down
+  if (
+    window.scrollY + window.innerHeight + 500 >
+    Number(scroller.style.getPropertyValue("--height"))
+  ) {
+    scroller.style.setProperty(
+      "--height",
+      Number(scroller.style.getPropertyValue("--height")) * 2
+    );
+  } */
+}
+let idleID;
+function handleScroll(e) {
+  // Clear our timeout throughout the scroll
+  window.clearTimeout(idleID);
+
+  // Set a timeout to run after scrolling ends
+  idleID = setTimeout(function () {
+    // Run the callback
+    resetScroller();
+  }, 66);
   container.y = -window.scrollY;
   container.x = -window.scrollX;
   removeOffScreenBitmaps();
-  const coords = getCoords();
-
-  /* if ((coords, container.y + container.height + 350 - coords.highestY < 400)) {
-    const bitmap = unusedBitmaps.pop();
-    bitmap.x = 0;
-    bitmap.y = coords.highestY + 350;
-    bitmaps.push(bitmap);
-    stage.addChild(bitmap);
-    console.log("adding");
-  } */
-
-  /*if (container.x < -200) {
-    bitmaps[0].x = 1450;
-  } */
 }
 init();
