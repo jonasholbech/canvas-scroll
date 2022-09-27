@@ -11,6 +11,7 @@ const scroller = document.querySelector(".scroller");
 
 const stage = new createjs.Stage("demoCanvas");
 const container = new createjs.Container();
+
 let bitmaps = [];
 let unusedBitmaps = [];
 window.container = container;
@@ -21,29 +22,33 @@ function init() {
   canvas.height = window.innerHeight;
   container.width = window.innerWidth;
   container.height = window.innerHeight;
-  window.scrollTo(2000, 2000);
+  /* container.regX = Math.floor(window.innerWidth / 2);
+  container.regY = Math.floor(window.innerHeight / 2); */
+
   stage.addChild(container);
   setupImages();
   window.addEventListener("scroll", handleScroll); //false?
   createjs.Ticker.framerate = 45;
   createjs.Ticker.addEventListener("tick", tick);
+  window.scrollTo(2000, 2000);
 }
 function tick(evt) {
   stage.update();
 }
 
 function setupImages() {
-  let x = getGridStartingPoint("x");
-  let y = getGridStartingPoint("y");
+  /* let x = getGridStartingPoint("x");
+  let y = getGridStartingPoint("y"); */
 
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
-    bitmap.x = x;
-    bitmap.y = y;
+    /* bitmap.x = x;
+    bitmap.y = y; */
     bitmap.width = IMAGE_WIDTH;
     bitmap.height = IMAGE_HEIGHT;
     bitmap.sourceRect = new createjs.Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
-    x += IMAGE_WIDTH;
+    unusedBitmaps.push(bitmap);
+    /* x += IMAGE_WIDTH;
     if (x > window.innerWidth + window.scrollX + IMAGE_WIDTH) {
       x = window.scrollX;
       y += IMAGE_HEIGHT;
@@ -53,7 +58,7 @@ function setupImages() {
     } else {
       bitmaps.push(bitmap);
       container.addChild(bitmap);
-    }
+    } */
   });
 }
 function hitTest(i) {
@@ -69,6 +74,7 @@ function hitTest(i) {
   ) {
     container.removeChild(bitmaps[i]);
     const el = bitmaps.splice(i, 1)[0];
+    console.log("removing", el);
     unusedBitmaps.push(el);
   }
 }
@@ -116,11 +122,11 @@ function addImages() {
       ty += IMAGE_HEIGHT
     ) {
       if (!usedPositions.find((pos) => pos.x === tx && pos.y === ty)) {
-        console.log(tx, ty, "is empty");
         vacantPositions.push({ x: tx, y: ty });
       }
     }
   }
+  console.log(usedPositions, vacantPositions);
   vacantPositions.forEach((pos) => {
     const newBitmap = unusedBitmaps.shift();
     newBitmap.y = pos.y;
