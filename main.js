@@ -23,10 +23,10 @@ function init() {
 function tick(evt) {
   stage.update();
 }
-//window.scrollBy(600, 600);
+
 function setupImages() {
-  let x = 0;
-  let y = 0;
+  let x = window.scrollX;
+  let y = window.scrollY;
   //TODO: scrollX til at starte med?
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
@@ -37,7 +37,7 @@ function setupImages() {
     bitmap.sourceRect = new createjs.Rectangle(0, 0, 350, 350);
     x += 350;
     if (x > window.innerWidth) {
-      x = 0;
+      x = window.scrollX;
       y += 350;
     }
     if (y > window.innerHeight + 1000) {
