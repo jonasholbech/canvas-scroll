@@ -44,7 +44,7 @@ function debounce() {
     window.scrollBy(1, 0); //triger "re-render"
   }, 66);
 }
-//not used, but needed for something like vue
+//not implemented, but needed for something like vue
 function unmount() {
   window.removeEventListener("resize", debounce);
   window.removeEventListener("scroll", handleScroll);
