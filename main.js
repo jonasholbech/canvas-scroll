@@ -55,7 +55,7 @@ function tick(evt) {
   stage.update();
 }
 
-//register all images, let addImages actually use them
+//register all images, not added to stage yet (addImages does that)
 function setupImages() {
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
