@@ -1,19 +1,18 @@
 import "./style.css";
 import {
   images,
-  getDistance,
   IMAGE_WIDTH,
   IMAGE_HEIGHT,
   getGridStartingPoint,
   RESET_TRIGGER,
   RESET_SCROLL,
+  FRAMERATE,
 } from "./modules/helpers";
 const canvas = document.querySelector("#demoCanvas");
 const scroller = document.querySelector(".scroller");
 
 const stage = new createjs.Stage("demoCanvas");
 const container = new createjs.Container();
-let keepCurrentBitmaps = false;
 let bitmaps = [];
 let unusedBitmaps = [];
 window.container = container;
@@ -27,8 +26,8 @@ function init() {
 
   stage.addChild(container);
   setupImages();
-  window.addEventListener("scroll", handleScroll); //false?
-  createjs.Ticker.framerate = 45;
+  window.addEventListener("scroll", handleScroll);
+  createjs.Ticker.framerate = FRAMERATE;
   createjs.Ticker.addEventListener("tick", tick);
 
   window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y);

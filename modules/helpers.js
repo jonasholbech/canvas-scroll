@@ -100,12 +100,8 @@ export const images = [
   "https://www.datocms-assets.com/73129/1658492786-karma-4_02-1.png?auto=compress&fm=webp&w=450&h=450&fit=crop",
   "https://www.datocms-assets.com/73129/1658492788-logo-on-marble-1.png?auto=compress&fm=webp&w=450&h=450&fit=crop",
 ];
-export function getDistance(o1, o2) {
-  var difx = o2.x - o1.x;
-  var dify = o2.y - o1.y;
-  var t = Math.sqrt(difx * difx + dify * dify);
-  return t;
-}
+
+export const FRAMERATE = 60;
 export const IMAGE_WIDTH = 450;
 export const IMAGE_HEIGHT = 450;
 export const RESET_TRIGGER = 0.6; //60%
