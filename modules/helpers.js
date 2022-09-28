@@ -106,15 +106,8 @@ export const IMAGE_WIDTH = 450;
 export const IMAGE_HEIGHT = 450;
 export const RESET_TRIGGER = 0.6; //60%
 export const RESET_TRIGGER_REPOSITION = 2000;
-export const RESET_SCROLL = { x: IMAGE_WIDTH * 25, y: IMAGE_HEIGHT * 25 };
+export const RESET_SCROLL = { x: IMAGE_WIDTH * 180, y: IMAGE_HEIGHT * 180 };
 
-export function debounce(func) {
-  let timer;
-  return function (event) {
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(func, 100, event);
-  };
-}
 //Figure out where the "grid" should start
 export function getGridStartingPoint(param) {
   if (param === "x") {

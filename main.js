@@ -1,7 +1,6 @@
 import "./style.css";
 import {
   images,
-  //debounce,
   IMAGE_WIDTH,
   IMAGE_HEIGHT,
   getGridStartingPoint,
@@ -45,7 +44,7 @@ function debounce() {
     window.scrollBy(1, 0); //triger "re-render"
   }, 66);
 }
-//not implemented, but needed for something like vue
+//not used, but needed for something like vue
 function unmount() {
   window.removeEventListener("resize", debounce);
   window.removeEventListener("scroll", handleScroll);
@@ -60,9 +59,7 @@ function tick(evt) {
 function setupImages() {
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
-    bitmap.width = IMAGE_WIDTH;
-    bitmap.height = IMAGE_HEIGHT;
-    bitmap.sourceRect = new createjs.Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
+    //bitmap.sourceRect = new createjs.Rectangle(0, 0, IMAGE_WIDTH, IMAGE_HEIGHT);
     unusedBitmaps.push(bitmap);
   });
 }
@@ -196,7 +193,6 @@ function handleScroll(e) {
 //kick off everything
 init();
 
-/* 
 //just for debug, so the elements can be accessed in the console
 
 window.container = container;
@@ -215,4 +211,4 @@ function debug() {
     getGridStartingPoint("x"),
     getGridStartingPoint("y")
   );
-} */
+}
