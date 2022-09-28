@@ -18,3 +18,7 @@
 Initialy, and when the user scrolls, the system creates a "grid" of where to place the images. Images not in that grid are pushed to `unusedBitmaps`, used images are in `bitmaps`.
 
 The system uses a createjs.container that is synced to window.scrollX/Y
+
+## Demo
+
+https://jonasholbech.github.io/canvas-scroll/
