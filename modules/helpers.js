@@ -105,7 +105,10 @@ export const FRAMERATE = 60;
 export const IMAGE_WIDTH = 450;
 export const IMAGE_HEIGHT = 450;
 export const RESET_TRIGGER = 0.6; //60%
+export const RESET_TRIGGER_REPOSITION = 2000;
 export const RESET_SCROLL = { x: IMAGE_WIDTH * 15, y: IMAGE_HEIGHT * 15 };
+
+//Figure out where the "grid" should start
 export function getGridStartingPoint(param) {
   if (param === "x") {
     let x =

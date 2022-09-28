@@ -7,35 +7,42 @@ import {
   RESET_TRIGGER,
   RESET_SCROLL,
   FRAMERATE,
+  RESET_TRIGGER_REPOSITION,
 } from "./modules/helpers";
 const canvas = document.querySelector("#demoCanvas");
+//the .scroller is the actual overflowing element
 const scroller = document.querySelector(".scroller");
 
 const stage = new createjs.Stage("demoCanvas");
 const container = new createjs.Container();
 let bitmaps = [];
 let unusedBitmaps = [];
-window.container = container;
+//just for debug, so the elements can be accessed in the console
+/* window.container = container;
 window.bitmaps = bitmaps;
 window.unusedBitmaps = unusedBitmaps;
+window.debug = debug;
+window.getGridStartingPoint = getGridStartingPoint;
+ */
+
+//onMount
 function init() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   container.width = window.innerWidth;
   container.height = window.innerHeight;
-
   stage.addChild(container);
   setupImages();
   window.addEventListener("scroll", handleScroll);
   createjs.Ticker.framerate = FRAMERATE;
   createjs.Ticker.addEventListener("tick", tick);
-
   window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y);
 }
 function tick(evt) {
   stage.update();
 }
 
+//register all images, let addImages actually use them
 function setupImages() {
   images.forEach((img) => {
     const bitmap = new createjs.Bitmap(img);
@@ -68,15 +75,14 @@ function removeOffScreenBitmaps() {
     ) {
       container.removeChild(bitmaps[i]);
       const el = bitmaps.splice(i, 1)[0];
-
       unusedBitmaps.push(el);
     }
   }
 }
 
 function resetScroller() {
-  //add space bottom
-  //reset at 60% scroll
+  //reset at RESET_TRIGGER% scroll (default 0.6)
+  //user scrolled far down
   if (
     window.scrollY / Number(scroller.style.getPropertyValue("--height")) >
     RESET_TRIGGER
@@ -87,6 +93,7 @@ function resetScroller() {
     );
   }
 
+  //user scrolled far right
   if (
     window.scrollX / Number(scroller.style.getPropertyValue("--width")) >
     RESET_TRIGGER
@@ -96,20 +103,20 @@ function resetScroller() {
       Number(scroller.style.getPropertyValue("--width")) * 2
     );
   }
-  //scroll up
-  if (window.scrollY < 2000) {
+  //user scrolled far up
+  if (window.scrollY < RESET_TRIGGER_REPOSITION) {
     const offset = window.scrollY % IMAGE_HEIGHT;
     window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y + offset);
     repositionImages();
   }
-  //scroll left
-  if (window.scrollX < 2000) {
+  //user scrolled far left
+  if (window.scrollX < RESET_TRIGGER_REPOSITION) {
     const offset = window.scrollX % IMAGE_WIDTH;
     window.scrollTo(RESET_SCROLL.x + offset, RESET_SCROLL.y);
     repositionImages();
   }
 }
-//TODO: start med større .scroller, sæt start coords til høj, høj, så vi minimerer chancen for left, up issues
+
 function addImages() {
   let x = getGridStartingPoint("x");
   let y = getGridStartingPoint("y");
@@ -137,6 +144,8 @@ function addImages() {
     container.addChild(newBitmap);
   });
 }
+
+//The user was force-scrolled, recalculate position of what was in view
 function repositionImages() {
   let x = getGridStartingPoint("x");
   let y = getGridStartingPoint("y");
@@ -154,31 +163,25 @@ function repositionImages() {
     bitmaps[i].x = vacantPositions[i].x;
   }
 }
+
 let idleID;
 function handleScroll(e) {
-  // Clear our timeout throughout the scroll
+  //when the user is idle, check if we need to increase the scrollarea or reposition the user
   window.clearTimeout(idleID);
-
-  // Set a timeout to run after scrolling ends
   idleID = setTimeout(function () {
-    // Run the callback
     resetScroller();
   }, 66);
+  //keep conatiner in sync with user scroll
   container.y = -window.scrollY;
   container.x = -window.scrollX;
-
-  /* if (keepCurrentBitmaps) {
-    repositionImages();
-    //keepCurrentBitmaps=false;
-    console.log("keep current");
-  } else { */
   removeOffScreenBitmaps();
   addImages();
-  /* } */
 }
+
+//kick off everything
 init();
 
-function debug() {
+/* function debug() {
   console.log({ unusedBitmaps });
   console.log({ bitmaps });
   console.log("container", container.x, container.y);
@@ -188,6 +191,4 @@ function debug() {
     getGridStartingPoint("x"),
     getGridStartingPoint("y")
   );
-}
-window.debug = debug;
-window.getGridStartingPoint = getGridStartingPoint;
+} */
