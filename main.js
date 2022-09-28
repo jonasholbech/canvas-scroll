@@ -5,13 +5,15 @@ import {
   IMAGE_WIDTH,
   IMAGE_HEIGHT,
   getGridStartingPoint,
+  RESET_TRIGGER,
+  RESET_SCROLL,
 } from "./modules/helpers";
 const canvas = document.querySelector("#demoCanvas");
 const scroller = document.querySelector(".scroller");
 
 const stage = new createjs.Stage("demoCanvas");
 const container = new createjs.Container();
-
+let keepCurrentBitmaps = false;
 let bitmaps = [];
 let unusedBitmaps = [];
 window.container = container;
@@ -22,15 +24,14 @@ function init() {
   canvas.height = window.innerHeight;
   container.width = window.innerWidth;
   container.height = window.innerHeight;
-  /* container.regX = Math.floor(window.innerWidth / 2);
-  container.regY = Math.floor(window.innerHeight / 2); */
 
   stage.addChild(container);
   setupImages();
   window.addEventListener("scroll", handleScroll); //false?
   createjs.Ticker.framerate = 45;
   createjs.Ticker.addEventListener("tick", tick);
-  window.scrollTo(2000, 2000);
+
+  window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y);
 }
 function tick(evt) {
   stage.update();
@@ -45,23 +46,6 @@ function setupImages() {
     unusedBitmaps.push(bitmap);
   });
 }
-/* function hitTest(i) {
-  if (
-    Math.sqrt(
-      window.innerWidth * window.innerWidth +
-        window.innerHeight * window.innerHeight
-    ) <
-    getDistance(bitmaps[i], {
-      x: window.scrollX + window.innerWidth,
-      y: window.scrollY + window.innerHeight,
-    })
-  ) {
-    container.removeChild(bitmaps[i]);
-    const el = bitmaps.splice(i, 1)[0];
-
-    unusedBitmaps.push(el);
-  }
-} */
 
 function removeOffScreenBitmaps() {
   let x = getGridStartingPoint("x");
@@ -90,26 +74,43 @@ function removeOffScreenBitmaps() {
     }
   }
 }
-/* function removeOffScreenBitmaps() {
-  //TODO: samme logik som vet at tilføje? lav et grid rundt om og se hvad der er langt nok væk?
-  for (let i = bitmaps.length - 1; i >= 0; i--) {
-    hitTest(i);
-  }
-} */
 
 function resetScroller() {
-  //window.scrollTo(2000, 2000);
-  /*  //expand down
+  //add space bottom
+  //reset at 60% scroll
   if (
-    window.scrollY + window.innerHeight + 500 >
-    Number(scroller.style.getPropertyValue("--height"))
+    window.scrollY / Number(scroller.style.getPropertyValue("--height")) >
+    RESET_TRIGGER
   ) {
     scroller.style.setProperty(
       "--height",
       Number(scroller.style.getPropertyValue("--height")) * 2
     );
-  } */
+  }
+
+  if (
+    window.scrollX / Number(scroller.style.getPropertyValue("--width")) >
+    RESET_TRIGGER
+  ) {
+    scroller.style.setProperty(
+      "--width",
+      Number(scroller.style.getPropertyValue("--width")) * 2
+    );
+  }
+  //scroll up
+  if (window.scrollY < 2000) {
+    const offset = window.scrollY % IMAGE_HEIGHT;
+    window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y + offset);
+    repositionImages();
+  }
+  //scroll left
+  if (window.scrollX < 2000) {
+    const offset = window.scrollX % IMAGE_WIDTH;
+    window.scrollTo(RESET_SCROLL.x + offset, RESET_SCROLL.y);
+    repositionImages();
+  }
 }
+//TODO: start med større .scroller, sæt start coords til høj, høj, så vi minimerer chancen for left, up issues
 function addImages() {
   let x = getGridStartingPoint("x");
   let y = getGridStartingPoint("y");
@@ -129,7 +130,6 @@ function addImages() {
       }
     }
   }
-
   vacantPositions.forEach((pos) => {
     const newBitmap = unusedBitmaps.shift();
     newBitmap.y = pos.y;
@@ -137,43 +137,23 @@ function addImages() {
     bitmaps.push(newBitmap);
     container.addChild(newBitmap);
   });
-  /* const newBitmap = unusedBitmaps.shift();
-  newBitmap.y = 2000;
-  newBitmap.x = 2000;
-  bitmaps.push(newBitmap);
-  container.addChild(newBitmap); */
-  /* let x = getGridStartingPoint("x");
+}
+function repositionImages() {
+  let x = getGridStartingPoint("x");
   let y = getGridStartingPoint("y");
-  let usedPositions = bitmaps.map((bm) => ({
-    x: Math.floor(bm.x),
-    y: Math.floor(bm.y),
-  }));
-
   let vacantPositions = [];
-
-  for (
-    let tx = 0;
-    tx < x + window.innerWidth + IMAGE_WIDTH * 2;
-    tx += IMAGE_WIDTH
-  ) {
-    for (
-      let ty = 0;
-      ty < y + window.innerHeight + IMAGE_HEIGHT * 2;
-      ty += IMAGE_HEIGHT
-    ) {
-      if (!usedPositions.find((pos) => pos.x === tx && pos.y === ty)) {
-        vacantPositions.push({ x: tx, y: ty });
-      }
+  bitmaps.sort((imgA, imgB) => imgA.x - imgB.x || imgA.y - imgB.y);
+  const xEnd = x + window.innerWidth + IMAGE_WIDTH;
+  const yEnd = y + window.innerHeight + IMAGE_HEIGHT;
+  for (let tx = x; tx < xEnd; tx += IMAGE_WIDTH) {
+    for (let ty = y; ty < yEnd; ty += IMAGE_HEIGHT) {
+      vacantPositions.push({ x: tx, y: ty });
     }
   }
-
-  vacantPositions.forEach((pos) => {
-    const newBitmap = unusedBitmaps.shift();
-    newBitmap.y = pos.y;
-    newBitmap.x = pos.x;
-    bitmaps.push(newBitmap);
-    container.addChild(newBitmap);
-  }); */
+  for (let i = 0; i < bitmaps.length; i++) {
+    bitmaps[i].y = vacantPositions[i].y;
+    bitmaps[i].x = vacantPositions[i].x;
+  }
 }
 let idleID;
 function handleScroll(e) {
@@ -187,17 +167,28 @@ function handleScroll(e) {
   }, 66);
   container.y = -window.scrollY;
   container.x = -window.scrollX;
+
+  /* if (keepCurrentBitmaps) {
+    repositionImages();
+    //keepCurrentBitmaps=false;
+    console.log("keep current");
+  } else { */
   removeOffScreenBitmaps();
   addImages();
+  /* } */
 }
 init();
 
 function debug() {
   console.log({ unusedBitmaps });
   console.log({ bitmaps });
-  console.log(container.x, container.y);
-  console.log(window.scrollX, window.scrollY);
-  console.log(getGridStartingPoint("x"), getGridStartingPoint("y"));
+  console.log("container", container.x, container.y);
+  console.log("scrollX/Y", window.scrollX, window.scrollY);
+  console.log(
+    "gridStartingPoint",
+    getGridStartingPoint("x"),
+    getGridStartingPoint("y")
+  );
 }
 window.debug = debug;
 window.getGridStartingPoint = getGridStartingPoint;
