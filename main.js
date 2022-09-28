@@ -1,6 +1,7 @@
 import "./style.css";
 import {
   images,
+  //debounce,
   IMAGE_WIDTH,
   IMAGE_HEIGHT,
   getGridStartingPoint,
@@ -17,13 +18,6 @@ const stage = new createjs.Stage("demoCanvas");
 const container = new createjs.Container();
 let bitmaps = [];
 let unusedBitmaps = [];
-//just for debug, so the elements can be accessed in the console
-/* window.container = container;
-window.bitmaps = bitmaps;
-window.unusedBitmaps = unusedBitmaps;
-window.debug = debug;
-window.getGridStartingPoint = getGridStartingPoint;
- */
 
 //onMount
 function init() {
@@ -37,7 +31,27 @@ function init() {
   createjs.Ticker.framerate = FRAMERATE;
   createjs.Ticker.addEventListener("tick", tick);
   window.scrollTo(RESET_SCROLL.x, RESET_SCROLL.y);
+  window.addEventListener("resize", debounce);
 }
+let resetID;
+function debounce() {
+  window.clearTimeout(resetID);
+  resetID = setTimeout(function () {
+    console.log("resize ended");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    container.width = window.innerWidth;
+    container.height = window.innerHeight;
+    window.scrollBy(1, 0); //triger "re-render"
+  }, 66);
+}
+//not implemented, but needed for something like vue
+function unmount() {
+  window.removeEventListener("resize", debounce);
+  window.removeEventListener("scroll", handleScroll);
+  createjs.Ticker.removeEventListener("tick", tick);
+}
+window.unmount = unmount;
 function tick(evt) {
   stage.update();
 }
@@ -166,6 +180,7 @@ function repositionImages() {
 
 let idleID;
 function handleScroll(e) {
+  console.log("scroll");
   //when the user is idle, check if we need to increase the scrollarea or reposition the user
   window.clearTimeout(idleID);
   idleID = setTimeout(function () {
@@ -181,7 +196,16 @@ function handleScroll(e) {
 //kick off everything
 init();
 
-/* function debug() {
+/* 
+//just for debug, so the elements can be accessed in the console
+
+window.container = container;
+window.bitmaps = bitmaps;
+window.unusedBitmaps = unusedBitmaps;
+window.debug = debug;
+window.getGridStartingPoint = getGridStartingPoint;
+
+function debug() {
   console.log({ unusedBitmaps });
   console.log({ bitmaps });
   console.log("container", container.x, container.y);
