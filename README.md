@@ -7,6 +7,7 @@
 3. The size of the `.scroller` element is set directly in the HTML
 4. I've set `user-scalable=0` in the html
 5. In the HTML there's a link in head to the underlying framework (createjs) which unfortunately is not on NPM (WTF?). That is the only dependency
+6. Since the images are not handled in CSS, sizing/cropping is done through the DatoCMS API `&w=450&h=450&fit=crop`. Image sizes whould match the settings in `modules/helpers.js`
 
 ## Known issues
 
