@@ -109,7 +109,7 @@ export function getDistance(o1, o2) {
 export const IMAGE_WIDTH = 450;
 export const IMAGE_HEIGHT = 450;
 export const RESET_TRIGGER = 0.6; //60%
-export const RESET_SCROLL = { x: IMAGE_WIDTH * 10, y: IMAGE_HEIGHT * 10 };
+export const RESET_SCROLL = { x: IMAGE_WIDTH * 15, y: IMAGE_HEIGHT * 15 };
 export function getGridStartingPoint(param) {
   if (param === "x") {
     let x =
